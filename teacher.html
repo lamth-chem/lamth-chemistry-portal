@@ -1,10 +1,106 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#176b52"><title>LamTH Chemistry | Teacher Dashboard</title>
-<style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f5f7f8;color:#202441}.wrap{max-width:980px;width:calc(100% - 28px);margin:auto;padding:26px 0 42px}header{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:22px}.brand{display:flex;gap:12px;align-items:center}.logo{width:48px;height:48px;border-radius:15px;background:#176b52;color:#fff;display:grid;place-items:center;font-weight:900;font-size:22px}h1{margin:0;font-size:clamp(1.35rem,4vw,1.9rem)}.sub{margin:4px 0 0;color:#69718a;font-size:.9rem}.tag{font-size:.78rem;font-weight:800;padding:7px 10px;border-radius:99px;background:#e6f4ee;color:#176b52}.card{background:#fff;border:1px solid #e4e7f0;border-radius:18px;padding:22px;margin-bottom:16px}.notice{border-color:#f0d18a;background:#fff8e7;color:#654b0e}.notice h2{margin:0 0 8px;font-size:1.12rem}.notice p,.notice li{line-height:1.55}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.tile{border:1px solid #e4e7f0;border-radius:14px;padding:17px}.tile h3{margin:0 0 7px;font-size:1rem}.tile p{margin:0;color:#69718a;font-size:.88rem;line-height:1.5}a{color:#176b52;font-weight:700}.btn{display:inline-block;border-radius:10px;background:#176b52;color:white;text-decoration:none;padding:11px 15px;font-weight:800}@media(max-width:620px){header{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.card{padding:17px}}
-</style></head><body><main class="wrap">
-<header><div class="brand"><div class="logo">L</div><div><h1>LamTH Chemistry</h1><p class="sub">Teacher Management Dashboard</p></div></div><span class="tag">TEACHER PORTAL</span></header>
-<section class="card notice"><h2>Teacher dashboard — backend setup required</h2><p>This page is a safe starting point. The Apps Script actions established so far support the student class list, attendance submission and attendance confirmation. We have not yet established protected teacher-management actions.</p><p><strong>Do not enter passwords or student information here yet.</strong> A password checked only in public browser code would not protect your records.</p><ul><li>Keep your Google Sheet private.</li><li>Never upload student records, payment data, or credentials to this public repository.</li><li>Before enabling teacher features, add server-side teacher authentication and authorised Apps Script actions.</li></ul></section>
-<section class="card"><h2 style="margin-top:0">Planned management tools</h2><div class="grid"><div class="tile"><h3>Student records</h3><p>Add, update, activate/deactivate students, assign classes and monthly fees.</p></div><div class="tile"><h3>Tuition sessions</h3><p>Create sessions, set dates and times, and manage session PINs.</p></div><div class="tile"><h3>Attendance</h3><p>Review attendance by student, class, date and session.</p></div><div class="tile"><h3>Payments</h3><p>Record fees paid, calculate balances and review payment history.</p></div></div></section>
-<section class="card"><h2 style="margin-top:0">Navigation</h2><p><a class="btn" href="index.html">Open Student Portal</a></p><p style="color:#69718a">Next: implement and test teacher authentication in Apps Script before connecting these tools to live records.</p></section><footer style="text-align:center;color:#69718a;font-size:.82rem">LamTH Chemistry · Teacher access must be enforced by the backend.</footer>
-</main></body></html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LamTH Chemistry | Teacher Portal</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #f3f0ff;
+      font-family: Arial, sans-serif;
+      color: #282044;
+    }
+    main {
+      width: min(380px, calc(100% - 48px));
+      padding: 30px;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 10px 35px #29204b18;
+      text-align: center;
+    }
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 9px;
+      background: #6842d8;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #message { margin-top: 18px; overflow-wrap: anywhere; }
+    .muted { color: #716b80; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>LamTH Chemistry</h1>
+    <p>Teacher Dashboard</p>
+    <p class="muted">Sign in using your authorised teacher Google account.</p>
+    <button id="signIn">Sign in with Google</button>
+    <button id="signOut" hidden>Sign out</button>
+    <div id="message" role="status">Ready to sign in.</div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from
+      "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut,
+      onAuthStateChanged
+    } from
+      "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyABbBnV-BV1B6QqDCp2VJ3fJopp7STefzM",
+      authDomain: "lamth-chemistry-teacher-afc1c.firebaseapp.com",
+      projectId: "lamth-chemistry-teacher-afc1c",
+      storageBucket: "lamth-chemistry-teacher-afc1c.firebasestorage.app",
+      messagingSenderId: "617837500859",
+      appId: "1:617837500859:web:2acfe8cf4e587745b70c9e"
+    };
+
+    const ALLOWED_EMAIL = "ltzihui@gmail.com";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const message = document.getElementById("message");
+    const signInButton = document.getElementById("signIn");
+    const signOutButton = document.getElementById("signOut");
+
+    signInButton.addEventListener("click", async () => {
+      message.textContent = "Opening Google sign-in...";
+      try {
+        const result = await signInWithPopup(auth, provider);
+        if (result.user.email?.toLowerCase() !== ALLOWED_EMAIL) {
+          await signOut(auth);
+          message.textContent = "Access denied: this Google account is not authorised.";
+          return;
+        }
+        message.textContent =
+          "Google sign-in successful. Backend security setup is still pending; no private records are available yet.";
+      } catch (error) {
+        message.textContent = "Sign-in error: " + error.message;
+      }
+    });
+
+    signOutButton.addEventListener("click", async () => {
+      await signOut(auth);
+      message.textContent = "Signed out.";
+    });
+
+    onAuthStateChanged(auth, user => {
+      signInButton.hidden = !!user;
+      signOutButton.hidden = !user;
+      if (!user) message.textContent = "Ready to sign in.";
+    });
+  </script>
+</body>
+</html>
